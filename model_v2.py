@@ -1,65 +1,82 @@
-from flask import Flask, request, jsonify
-from sklearn.datasets import load_iris
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import cross_val_score
 import numpy as np
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
+import joblib
+import mlflow
+import mlflow.sklearn
+from sklearn.datasets import load_iris
 
-app = Flask(__name__)
 
-# Global variable to store the trained model
-model = None
+iris = load_iris()
+X, y = iris.data, iris.target
 
-
-def train_model():
-    """Train a DecisionTreeClassifier on the Iris dataset."""
-    global model
-    data = load_iris()
-    X, y = data.data, data.target
+# Function to train a DecisionTreeClassifier
+def train_decision_tree():
+    """Train a DecisionTreeClassifier on the dataset."""
     model = DecisionTreeClassifier()
     model.fit(X, y)
     return model
 
-
+# Function to evaluate a model using cross-validation
 def evaluate_model(model):
     """Evaluate the model using cross-validation and return the scores."""
-    data = load_iris()
-    X, y = data.data, data.target
     scores = cross_val_score(model, X, y, cv=5)
     return {
         "scores": scores.tolist(),
         "mean_accuracy": scores.mean()
     }
 
+# Function to train an SVM using GridSearchCV
+def train_svm():
+    """Train an SVM using GridSearchCV on the dataset."""
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-@app.route('/')
-def home():
-    return "Welcome to the ML Model API!"
+    param_grid = {
+        'C': [0.1, 1, 10, 100],
+        'gamma': [1, 0.1, 0.01, 0.001],
+        'kernel': ['rbf', 'linear']
+    }
+    
+    svm = SVC()
+    grid_search = GridSearchCV(estimator=svm, param_grid=param_grid, cv=5, verbose=2, n_jobs=-1)
+    grid_search.fit(X_train, y_train)
+    
+    best_model = grid_search.best_estimator_
+    joblib.dump(best_model, 'best_svm_model.pkl')
+    return best_model
 
+# Set MLflow experiment
+experiment_name = "MLflow DVC Integration Experiment"
 
-@app.route('/train', methods=['GET'])
-def train():
-    train_model()
-    return "Model trained successfully!"
+# Check if the experiment exists
+experiment = mlflow.get_experiment_by_name(experiment_name)
+if experiment is not None:
+    experiment_id = experiment.experiment_id
+else:
+    experiment_id = mlflow.create_experiment(experiment_name)
 
+mlflow.set_experiment(experiment_name)
 
-@app.route('/evaluate', methods=['GET'])
-def evaluate():
-    evaluation = evaluate_model(model)
-    return jsonify(evaluation)
+with mlflow.start_run(run_name="Decision Tree Experiment"):
+    # Train and evaluate the DecisionTreeClassifier
+    decision_tree_model = train_decision_tree()
+    decision_tree_evaluation = evaluate_model(decision_tree_model)
+    print("Decision Tree Evaluation:", decision_tree_evaluation)
 
+    # Log parameters and metrics
+    mlflow.log_param("model_type", "DecisionTreeClassifier")
+    mlflow.log_metric("mean_accuracy", decision_tree_evaluation["mean_accuracy"])
+    mlflow.sklearn.log_model(decision_tree_model, "model")
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    if not model:
-        return "Model not trained yet!", 400
-    data = request.json
-    if not data or 'input' not in data:
-        return "Invalid input!", 400
-    input_data = np.array(data['input']).reshape(1, -1)
-    prediction = model.predict(input_data)
-    return jsonify({"prediction": prediction.tolist()})
+with mlflow.start_run(run_name="SVM Experiment"):
+    # Train and evaluate the SVM
+    svm_model = train_svm()
+    svm_evaluation = evaluate_model(svm_model)
+    print("SVM Evaluation:", svm_evaluation)
 
-
-if __name__ == "__main__":
-    train_model()
-    app.run(host='0.0.0.0', port=5000)
+    # Log parameters and metrics
+    mlflow.log_param("model_type", "SVM")
+    mlflow.log_metric("mean_accuracy", svm_evaluation["mean_accuracy"])
+    mlflow.sklearn.log_model(svm_model, "model")

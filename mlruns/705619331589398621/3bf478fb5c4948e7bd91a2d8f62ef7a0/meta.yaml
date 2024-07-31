@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/ronit.mondal/Desktop/Mtech/MLOPS_Assgnmt_1/mlruns/705619331589398621/3bf478fb5c4948e7bd91a2d8f62ef7a0/artifacts
+end_time: 1722430053685
+entry_point_name: ''
+experiment_id: '705619331589398621'
+lifecycle_stage: active
+run_id: 3bf478fb5c4948e7bd91a2d8f62ef7a0
+run_name: SVM Experiment
+run_uuid: 3bf478fb5c4948e7bd91a2d8f62ef7a0
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1722430048708
+status: 3
+tags: []
+user_id: Ronit.Mondal
