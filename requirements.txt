@@ -1,7 +1,7 @@
 pandas
 numpy
 flask
-json
 scikit-learn
 mlflow
 flask
+dvc
