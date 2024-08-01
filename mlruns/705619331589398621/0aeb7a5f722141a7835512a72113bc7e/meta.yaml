@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/ronit.mondal/Desktop/Mtech/MLOPS_Assgnmt_1/mlruns/705619331589398621/0aeb7a5f722141a7835512a72113bc7e/artifacts
+end_time: 1722480188841
+entry_point_name: ''
+experiment_id: '705619331589398621'
+lifecycle_stage: active
+run_id: 0aeb7a5f722141a7835512a72113bc7e
+run_name: Decision Tree Experiment
+run_uuid: 0aeb7a5f722141a7835512a72113bc7e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1722480181626
+status: 3
+tags: []
+user_id: Ronit.Mondal
